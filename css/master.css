@@ -1,0 +1,19 @@
+html, body {
+  background-color: honeydew;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+ }
+
+
+.controls {
+  padding: 5px;
+  margin-left: 25px;
+  margin-top: 25px;
+}
+
+#map {
+  border: 1px solid black;
+  height: 88vh;
+  width: 80vw;
+}
