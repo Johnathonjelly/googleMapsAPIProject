@@ -3,6 +3,18 @@
 //Lab: 3 -- Traveling Brad
 //Goal: Let user plot points on a "map", calculate shortest route, show avatar of user taking that route
 
+//remove table stuff 
+//https://stackoverflow.com/questions/3387427/remove-element-by-id
+Element.prototype.remove = function () {
+  this.parentElement.removeChild(this);
+};
+NodeList.prototype.remove = HTMLCollection.prototype.remove = function () {
+  for (var i = this.length - 1; i >= 0; i--) {
+    if (this[i] && this[i].parentElement) {
+      this[i].parentElement.removeChild(this[i]);
+    }
+  }
+};
 const milesTD = document.querySelector('.miles');
 let markers = []; //array to hold info about markers added to map
 
@@ -13,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (document.querySelectorAll('#map').length > 0) {
     const js_file = document.createElement('script');
     js_file.type = 'text/javascript';
-    js_file.src = 'https://maps.googleapis.com/maps/api/js?callback=initMap&key=AIzaSyDv5RCfRsksmep6lfnxBb-VaCyqFfGaNmw&&libraries=geometry&language=en';
+    js_file.src = 'https://maps.googleapis.com/maps/api/js?callback=initMap&key=AIzaSyDv5RCfRsksmep6lfnxBb-VaCyqFfGaNmw&&libraries=geometry';
     document.getElementsByTagName('head')[0].appendChild(js_file);
   }
 });
@@ -26,7 +38,14 @@ initMap = () => {
   let polyLine; //"draw" line on map
   let polyOptions; //options for polyline 
 
-  //latlng for GP so that when the map is loaded it is centered on GP
+
+  //calculate the distance between two markers -- returns a value in meters
+  function calcDistance(fromLat, fromLng, toLat, toLng) {
+    return google.maps.geometry.spherical.computeDistanceBetween(
+      new google.maps.LatLng(fromLat, fromLng), new google.maps.LatLng(toLat, toLng));
+  }
+
+
   const directionsService = new google.maps.DirectionsService(); //google maps direction service AP
   const renderOps = {
     draggable: true,
@@ -37,6 +56,7 @@ initMap = () => {
 
   const directionsDisplay = new google.maps.DirectionsRenderer(renderOps); //render directions API
 
+  //latlng for GP so that when the map is loaded it is centered on GP
   const grantsPass = {
     lat: 42.434113,
     lng: -123.333166
@@ -49,44 +69,55 @@ initMap = () => {
   };
 
   //make a function that will create a table labeling the markers position(lat,lng) -- append table to dom and update each time a new marker is placed 
-  let createDistanceT = () => {
+  let createPositionT = () => {
     //remove table first then update//
     ///------------------///
-    Element.prototype.remove = function () {
-      this.parentElement.removeChild(this);
+    //remove the position table 
+    let removePositionTable = document.getElementsByTagName('table')[1];
+    if (removePositionTable) {
+      removePositionTable.remove();
+    } else {
+      console.log('No table to be removed');
     }
-    NodeList.prototype.remove = HTMLCollection.prototype.remove = function () {
-      for (var i = this.length - 1; i >= 0; i--) {
-        if (this[i] && this[i].parentElement) {
-          this[i].parentElement.removeChild(this[i]);
-        }
-      }
-    }
-    let tableRemove = document.getElementsByTagName('table')[1];
-    if (tableRemove) {
-      tableRemove.remove();
+    //remove distance table
+    let removeDistanceTable = document.getElementsByTagName('table')[2];
+    if (removeDistanceTable) {
+      removeDistanceTable.remove();
     } else {
       console.log('No table to be removed');
     }
 
     ///-----------------///
     //-----table making
-    const table = document.createElement('table');
-    const tHead = document.createElement('thead');
-    const tr = document.createElement('tr');
-    document.body.appendChild(table);
-    table.appendChild(tHead);
-    tr.appendChild(document.createElement('th')).appendChild(document.createTextNode('Marker Index'));
-    tr.appendChild(document.createElement('th')).appendChild(document.createTextNode('Latitude'));
-    tr.appendChild(document.createElement('th')).appendChild(document.createTextNode('Longitude'));
-    tHead.appendChild(tr);
+    const table1 = document.createElement('table');
+    const tHead1 = document.createElement('thead');
+    const tr1 = document.createElement('tr');
+    document.body.appendChild(table1);
+    table1.appendChild(tHead1);
+    tr1.appendChild(document.createElement('th')).appendChild(document.createTextNode('Marker Index'));
+    tr1.appendChild(document.createElement('th')).appendChild(document.createTextNode('Latitude'));
+    tr1.appendChild(document.createElement('th')).appendChild(document.createTextNode('Longitude'));
+    tHead1.appendChild(tr1);
     for (let i = 0; i < markers.length; i += 1) {
-      table.appendChild(document.createElement('tr')).appendChild(document.createElement('td')).appendChild(document.createTextNode(`Marker: ${i}`));
-      table.childNodes[`${i + 1}`].appendChild(document.createElement('td')).appendChild(document.createTextNode(`${markers[i].position.lat()}`));
-      table.childNodes[`${i + 1}`].appendChild(document.createElement('td')).appendChild(document.createTextNode(`${markers[i].position.lng()}`));
+      table1.appendChild(document.createElement('tr')).appendChild(document.createElement('td')).appendChild(document.createTextNode(`Marker: ${i}`));
+      table1.childNodes[`${i + 1}`].appendChild(document.createElement('td')).appendChild(document.createTextNode(`${markers[i].position.lat()}`));
+      table1.childNodes[`${i + 1}`].appendChild(document.createElement('td')).appendChild(document.createTextNode(`${markers[i].position.lng()}`));
     }
 
 
+    const table2 = document.createElement('table');
+    const tHead2 = document.createElement('thead');
+    const tr2 = document.createElement('tr');
+    document.body.appendChild(table2);
+    table2.appendChild(tHead2);
+    tr2.appendChild(document.createElement('th')).appendChild(document.createTextNode('Distance Between'));
+    tr2.appendChild(document.createElement('th')).appendChild(document.createTextNode(`Marker: Index`));
+    tHead2.appendChild(tr2);
+    for (let i = 0; i < markers.length; i += 1) {
+      table2.appendChild(document.createElement('tr')).appendChild(document.createElement('td')).appendChild(document.createTextNode(`Marker: ${i}`));
+      table2.childNodes[`${i + 1}`].appendChild(document.createElement('td')).appendChild(document.createTextNode(`${calcDistance(markers[i].position.lat(), markers[i].position.lng()) * 0.00062137}`));
+      table2.childNodes[`${i + 1}`].appendChild(document.createElement('td')).appendChild(document.createTextNode(`${calcDistance(markers[`${i + 1}`].position.lat(), markers[`${i + 1}`].position.lng()) * 0.00062137}`));
+    }
   }
 
 
@@ -144,15 +175,17 @@ initMap = () => {
     });
     markers.push(marker);
     map.setCenter(event.latLng);
-    let meters = google.maps.geometry.spherical.computeLength(polyLine.getPath());
+    //get the line length in meters
+    const meters = google.maps.geometry.spherical.computeLength(polyLine.getPath());
+    //convert line length to miles
     let length = meters * 0.00062137;
+    //append miles to html table
     milesTD.innerHTML = length.toFixed(2);
-    for (let i = 0; i < markers.length; i += 1) {
-      console.log(`Lat: ${markers[i].position.lat()} 
-      Lng: ${markers[i].position.lng()}`);
-    }
-    createDistanceT();
-
+    // for (let i = 0; i < markers.length; i += 1) {
+    //   console.log(`Lat: ${markers[i].position.lat()} 
+    //   Lng: ${markers[i].position.lng()}`);
+    // }
+    createPositionT();
   }
 
 
@@ -167,5 +200,5 @@ initMap = () => {
         polyLine.getPath().removeAt(i);
       }
     }
-  }
+  };
 }
