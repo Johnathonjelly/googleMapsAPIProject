@@ -15,8 +15,7 @@ NodeList.prototype.remove = HTMLCollection.prototype.remove = function () {
     }
   }
 };
-const milesTD = document.querySelector('.miles');
-let markers = []; //array to hold info about markers added to map
+
 
 
 //Only load this script after the html is parsed
@@ -34,17 +33,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
 initMap = () => {
 
-  let map; //map
-  let polyLine; //"draw" line on map
-  let polyOptions; //options for polyline 
-
-
   //calculate the distance between two markers -- returns a value in meters
   function calcDistance(fromLat, fromLng, toLat, toLng) {
     return google.maps.geometry.spherical.computeDistanceBetween(
-      new google.maps.LatLng(fromLat, fromLng), new google.maps.LatLng(toLat, toLng));
+      new google.maps.LatLng(fromLat, fromLng), new google.maps.LatLng(toLat, toLng)).toFixed(3);
   }
 
+  const milesTD = document.querySelector('.miles');
+  let markers = []; //array to hold info about markers added to map
+  let map; //map
+  let polyLine; //"draw" line on map
+  let polyOptions; //options for polyline 
 
   const directionsService = new google.maps.DirectionsService(); //google maps direction service AP
   const renderOps = {
@@ -69,27 +68,16 @@ initMap = () => {
   };
 
   //make a function that will create a table labeling the markers position(lat,lng) -- append table to dom and update each time a new marker is placed 
-  let createPositionT = () => {
-    //remove table first then update//
-    ///------------------///
-    //remove the position table 
-    let removePositionTable = document.getElementsByTagName('table')[1];
-    if (removePositionTable) {
-      removePositionTable.remove();
+  function createPositionT() {
+    let tableRemove = document.getElementsByTagName('table')[1];
+    if (tableRemove) {
+      tableRemove.remove();
     } else {
       console.log('No table to be removed');
     }
-    //remove distance table
-    let removeDistanceTable = document.getElementsByTagName('table')[2];
-    if (removeDistanceTable) {
-      removeDistanceTable.remove();
-    } else {
-      console.log('No table to be removed');
-    }
-
-    ///-----------------///
     //-----table making
-    const table1 = document.createElement('table');
+    let table1 = document.createElement('table');
+    table1.className = "position";
     const tHead1 = document.createElement('thead');
     const tr1 = document.createElement('tr');
     document.body.appendChild(table1);
@@ -105,19 +93,22 @@ initMap = () => {
     }
 
 
-    const table2 = document.createElement('table');
-    const tHead2 = document.createElement('thead');
-    const tr2 = document.createElement('tr');
-    document.body.appendChild(table2);
-    table2.appendChild(tHead2);
-    tr2.appendChild(document.createElement('th')).appendChild(document.createTextNode('Distance Between'));
-    tr2.appendChild(document.createElement('th')).appendChild(document.createTextNode(`Marker: Index`));
-    tHead2.appendChild(tr2);
-    for (let i = 0; i < markers.length; i += 1) {
-      table2.appendChild(document.createElement('tr')).appendChild(document.createElement('td')).appendChild(document.createTextNode(`Marker: ${i}`));
-      table2.childNodes[`${i + 1}`].appendChild(document.createElement('td')).appendChild(document.createTextNode(`${calcDistance(markers[i].position.lat(), markers[i].position.lng()) * 0.00062137}`));
-      table2.childNodes[`${i + 1}`].appendChild(document.createElement('td')).appendChild(document.createTextNode(`${calcDistance(markers[`${i + 1}`].position.lat(), markers[`${i + 1}`].position.lng()) * 0.00062137}`));
-    }
+    // let table2 = document.createElement('table');
+    // const tHead2 = document.createElement('thead');
+    // const tr2 = document.createElement('tr');
+    // document.body.appendChild(table2);
+    // table2.className = "distance";
+    // table2.appendChild(tHead2);
+    // tr2.appendChild(document.createElement('th')).appendChild(document.createTextNode('Distance Between'));
+    // tr2.appendChild(document.createElement('th')).appendChild(document.createTextNode(`Marker: Index`));
+    // tHead2.appendChild(tr2);
+    // for (let i = 0; i < markers.length; i += 1) {
+    //   table2.appendChild(document.createElement('tr')).appendChild(document.createElement('td')).appendChild(document.createTextNode(`Marker: ${i}`));
+    //   table2.childNodes[`${i + 1}`].appendChild(document.createElement('td')).appendChild(document.createTextNode(`${calcDistance(markers[i].position.lat(), markers[i].position.lng()) * 0.00062137}`));
+    //   table2.childNodes[`${i + 1}`].appendChild(document.createElement('td')).appendChild(document.createTextNode(`${calcDistance(markers[`${i + 1}`].position.lat().toFixed(5), markers[`${i + 1}`].position.lng().toFixed(5)) * 0.00062137}`));
+    // }
+
+    console.log(`Distance between marker[0] & marker[1]: ${calcDistance(markers[0].position.lat(), markers[0].position.lng(), markers[1].position.lat(), markers[1].position.lng())}`);
   }
 
 
